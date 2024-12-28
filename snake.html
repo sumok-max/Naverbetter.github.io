@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반응형 스네이크 게임</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #gameCanvas {
+            border: 2px solid #333;
+            max-width: 100%;
+            max-height: 100vh;
+        }
+        #controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            touch-action: manipulation;
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            margin: 5px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px solid #333;
+            border-radius: 50%;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반응형 스네이크 게임</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #gameCanvas {
+            border: 2px solid #333;
+            max-width: 100%;
+            max-height: 100vh;
+        }
+        #controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            touch-action: manipulation;
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            margin: 5px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px solid #333;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="controls">
+        <button class="control-btn" id="upBtn">↑</button><br>
+        <button class="control-btn" id="leftBtn">←</button>
+        <button class="control-btn" id="rightBtn">→</button><br>
+        <button class="control-btn" id="downBtn">↓</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const controls = document.getElementById('controls');
+
+        let snake, food, cellSize, gridSize;
+
+        function resizeCanvas() {
+            const maxSize = Math.min(window.innerWidth, window.innerHeight) - 20;
+            canvas.width = canvas.height = maxSize;
+            cellSize = Math.floor(maxSize / 20);
+            gridSize = Math.floor(maxSize / cellSize);
+            if ('ontouchstart' in window) {
+                controls.style.display = 'block';
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Snake {
+            constructor() {
+                this.body = [{x: 5, y: 5}];
+                this.direction = 'right';
+                this.nextDirection = 'right';
+            }
+
+            move() {
+                this.direction = this.nextDirection;
+                const head = {...this.body[0]};
+                switch(this.direction) {
+                    case 'up': head.y--; break;
+                    case 'down': head.y++; break;
+                    case 'left': head.x--; break;
+                    case 'right': head.x++; break;
+                }
+                this.body.unshift(head);
+                if (head.x === food.x && head.y === food.y) {
+                    createFood();
+                } else {
+                    this.body.pop();
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = 'green';
+                this.body.forEach(part => {
+                    ctx.fillRect(part.x * cellSize, part.y * cellSize, cellSize - 1, cellSize - 1);
+                });
+            }
+
+            checkCollision() {
+                const head = this.body[0];
+                return head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize ||
+                    this.body.slice(1).some(part => part.x === head.x && part.y === head.y);
+            }
+        }
+
+        function createFood() {
+            food = {
+                x: Math.floor(Math.random() * gridSize),
+                y: Math.floor(Math.random() * gridSize)
+            };
+        }
+
+        function drawFood() {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x * cellSize, food.y * cellSize, cellSize - 1, cellSize - 1);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            snake.move();
+            if (snake.checkCollision()) {
+                alert('게임 오버!');
+                snake = new Snake();
+                createFood();
+            }
+            snake.draw();
+            drawFood();
+        }
+
+        function changeDirection(newDirection) {
+            const opposites = {up: 'down', down: 'up', left: 'right', right: 'left'};
+            if (newDirection !== opposites[snake.direction]) {
+                snake.nextDirection = newDirection;
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            const directions = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right'};
+            const newDirection = directions[e.key];
+            if (newDirection) changeDirection(newDirection);
+        });
+
+        ['up', 'down', 'left', 'right'].forEach(dir => {
+            document.getElementById(dir + 'Btn').addEventListener('click', () => changeDirection(dir));
+        });
+
+        snake = new Snake();
+        createFood();
+        setInterval(gameLoop, 100);
+    </script>
+</body>
+</html>
